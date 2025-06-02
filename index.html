@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диалоговое Окно с GigaChat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 400px;
+            height: 500px;
+            background-color: rgb(255, 255, 255); /* Белый фон */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: none; /* Удаляем тень */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: none; /* Удаляем границу */
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .header h3 {
+            margin: 0;
+        }
+        form {
+            display: flex;
+            align-items: center;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            background-image: url('unnamed.png'); /* Путь к изображению бумажного самолетика */
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            background-color: transparent; /* Прозрачный фон */
+            color: transparent; /* Прозрачный текст */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px; /* Увеличенный шрифт */
+            width: 45px; /* Увеличенная ширина */
+            height: 45px; /* Увеличенная высота */
+        }
+        button:hover {
+            filter: brightness(120%); /* Яркость при наведении */
+        }
+        .result {
+            margin-top: 15px;
+            border: none; /* Удаляем границу */
+            padding: 10px;
+            border-radius: 5px;
+            background-color: white; /* Белый фон */
+            word-wrap: break-word;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .message.user-message {
+            justify-content: flex-end;
+        }
+        .message img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .message .user {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .message .gigachat {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .open-dialog {
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #007bff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            transition: all 0.3s ease;
+        }
+        .open-dialog img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        .open-dialog:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #333;
+        }
+        #userInput{
+            margin-top: 12px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container hidden" id="dialogContainer">
+    <div class="header">
+        <img src="astralen.jpg" alt="GigaChat Icon">
+        <h3>Астрален</h3>
+    </div>
+    <div class="close-button" onclick="closeDialog()">×</div>
+    <div id="messagesContainer" class="result"></div>
+    <form id="chatForm">
+        <input type="text" id="userInput" placeholder="Ваш вопрос..." required>
+        <button type="submit"></button> <!-- Здесь больше нет текста -->
+    </form>
+</div>
+<div class="open-dialog" onclick="openDialog()">
+    <img src="astralen.jpg" alt="GigaChat Icon">
+</div>
+<script>
+document.getElementById("chatForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    
+    // Получаем значение введенного пользователем запроса
+    const userInput = document.getElementById("userInput").value.trim();
+    
+    // Отображаем сообщение о загрузке
+    document.getElementById("messagesContainer").innerHTML += `
+        <div class="message user-message">
+            <div class="user">${userInput}</div>
+            <img src="seymyr.png" alt="User Icon">
+        </div>
+    `;
+    
+    // Отправляем запрос к серверу
+    const response = await fetch('/api/gigachat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: userInput })
+    });
+    
+    // Обрабатываем ответ от сервера
+    const data = await response.json();
+    
+    // Выводим результат
+    document.getElementById("messagesContainer").innerHTML += `
+        <div class="message">
+            <img src="astralen.jpg" alt="GigaChat Icon">
+            <div class="gigachat">${data.response}</div>
+        </div>
+    `;
+    
+    // Очищаем поле ввода
+    document.getElementById("userInput").value = '';
+});
+
+function openDialog() {
+    const dialogContainer = document.getElementById("dialogContainer");
+    const openDialogButton = document.querySelector(".open-dialog");
+    dialogContainer.classList.toggle("hidden");
+    openDialogButton.classList.toggle("hidden");
+}
+
+function closeDialog() {
+    const dialogContainer = document.getElementById("dialogContainer");
+    const openDialogButton = document.querySelector(".open-dialog");
+    dialogContainer.classList.toggle("hidden");
+    openDialogButton.classList.toggle("hidden");
+}
+</script>
+</body>
+</html>
+<!--
+<script>
+document.getElementById("chatForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    
+    // Получаем значение введенного пользователем запроса
+    const userInput = document.getElementById("userInput").value.trim();
+    
+    // Отображаем сообщение о загрузке
+    document.getElementById("resultContainer").innerHTML = "Идет обработка...";
+    
+    // Отправляем запрос к серверу
+    const response = await fetch('/api/gigachat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: userInput })
+    });
+    
+    // Обрабатываем ответ от сервера
+    const data = await response.json();
+    
+    // Выводим результат
+    document.getElementById("resultContainer").innerHTML = data.response;
+});
+</script>
+</body>
+</html>-->
